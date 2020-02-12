@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, Jbox2DTestbedActivity!</string>
+    <string name="app_name">Zen Maize Ball</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="about_game">
+        This game helps to meditate and focus on this moment for the sake of utter balance</string>
+    <string name="howto_play">        Take all wooden marbles to the center like you take you escaping smooth energies to center of your being</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_welcome">WelcomeActivity</string>
+    <string name="title_activity_splash">SplashActivity</string>
+
+</resources>
