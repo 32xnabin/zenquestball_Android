@@ -17,6 +17,7 @@ import org.jbox2d.dynamics.contacts.Contact;
 import org.jbox2d.dynamics.joints.Joint;
 import org.jbox2d.dynamics.joints.MouseJoint;
 import org.jbox2d.dynamics.joints.MouseJointDef;
+import org.json.JSONObject;
 
 //import com.navin.activities.GameActivity;
 //import com.navin.activities.MainActivity;
@@ -48,8 +49,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -57,6 +60,14 @@ import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -91,38 +102,41 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 	int num;
 	int min;
 	int sec;
+	Animation animFadein,animFadeout;
 
 
 	POJO pojo;
 
-     Bitmap backgraaaa;
-     Bitmap hole;
-     Bitmap background;
-     Context context;
-     int level;
-	public Box2dSurfaceView(Context context,Bitmap ball,POJO pojo,int level) {
+	Bitmap backgraaaa;
+	Bitmap hole;
+	Bitmap background;
+	Context context;
+	TextView message;
+	int level;
+	public Box2dSurfaceView(Context context,Bitmap back,POJO pojo,int level,TextView message) {
 		super(context);
 		this.context=context;
-		this.backgraaaa =ball;
+		this.backgraaaa = ((BitmapDrawable) getResources().getDrawable(R.drawable.backgroud)).getBitmap();
 		this.pojo=pojo;
 		level=level;
+		this.message=message;
 		Drawable drawable3 =getResources().getDrawable(R.drawable.hole);
-	     hole = ((BitmapDrawable) drawable3).getBitmap();
-	     background=((BitmapDrawable) getResources().getDrawable(R.drawable.brik)).getBitmap();
+		hole = ((BitmapDrawable) drawable3).getBitmap();
+		background=((BitmapDrawable) getResources().getDrawable(R.drawable.brik)).getBitmap();
 
 		// TODO Auto-generated constructor stub
 		init();
 	}
 
-/////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////
 	private void init() {
 		ShowTime();
 		holder = getHolder();
 		holder.addCallback(this);
 
-		paint = new Paint(Paint.ANTI_ALIAS_FLAG);// �޾��
-		paint.setStyle(Style.FILL); // �����ʽ
-		paint.setTextSize(12); // �����С
+		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		paint.setStyle(Style.FILL);
+		paint.setTextSize(12);
 
 
 	}
@@ -133,7 +147,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		// TODO Auto-generated method stub
-		 canvas.drawText(timer, 0f, 80f, paint);
+		canvas.drawText(timer, 0f, 80f, paint);
 		super.onDraw(canvas);
 	}
 
@@ -186,30 +200,16 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		return world;
 	}
 
-////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * ִ����Ϸ�߼�����
-	 */
+
+
 	public void _update() {
 		world.step(dt, velIter, posIter);
 	}
 
 	private Rect rect = new Rect();
-	public void drawDeclare(Canvas canvas) {
-		String text = "��ʹ֮���ʾ��Demo";
-		// ��ȡ�ı����
-		paint.getTextBounds(text, 0, text.length(), rect);
-		// ����Ļ����λ����ʾ�ı�
-		paint.setColor(0xfff000f0); // ע�������λ ff ��?��͸���ȣ������õĻ�������ȫ͸���ˣ��������κ�Ч��
-		canvas.drawText(text,
-				(screenW - rect.width()) / 2, screenH / 2 + rect.height() / 2,
-				paint);
-	}
 
-	/**
-	 * ���û�����ɫ
-	 * @param color
-	 */
+
+
 	public void setColor(int color) {
 		int red = (color & 0xff0000) >> 16;
 		int green = (color & 0x00ff00) >> 8;
@@ -217,10 +217,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		paint.setColor(Color.rgb(red, green, blue));
 	}
 
-	/**
-	 * ����FPS
-	 * @param canvas
-	 */
+
 	private void drawFPS(Canvas canvas) {
 		paint.setTextSize(22f);
 		setColor(Color.parseColor("#000000"));
@@ -229,7 +226,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 //			if (useTime > 40){
 //			totalTime=totalTime+1;}
 
-			 num=totalTime/60;
+			num=totalTime/60;
 
 			sec=sec+num;
 
@@ -245,53 +242,44 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 
 	}
 
-	/**
-	 * BOX2D ���Ի�ͼ
-	 * @param canvas
-	 */
+
 	public void worldDraw(Canvas canvas) {
 		debugDraw.draw(canvas);
 		world.drawDebugData();
 	}
 
-	/**
-	 * �����ؽ�
-	 */
+
 	private Vec2 v1 = new Vec2();
 	private Vec2 v2 = new Vec2();
 	private void mouseJointDraw(Canvas canvas) {
-		// �����ؽ�
+
 		if (mouseJoint != null) {
 			paint.setColor(0xff00ff00);
 
 
 			mouseJoint.getAnchorA(v1);
-			//ת�����ӽ��е�λ��
+
 			debugDraw.getWorldToScreenToOut(v1, v1);
 
 			mouseJoint.getAnchorB(v2);
-			//ת�����ӽ��е�λ��
+
 			debugDraw.getWorldToScreenToOut(v2, v2);
 
 			canvas.drawLine(v1.x, v1.y, v2.x, v2.y, paint);
 		}
 	}
 
-	/**
-	 * ִ����Ϸ����
-	 */
+
 	public void _draw(Canvas canvas) {
 
-		//canvas.drawColor(Color.CYAN);
+
 
 		drawBackground(canvas);
-		plot(canvas);
+		//                                                                                                                                                                                                                	plot(canvas);
 
 
 		worldDraw(canvas);
-//		mouseJointDraw(canvas);
-//		drawFPS(canvas);
-//		drawDeclare(canvas);
+
 	}
 
 
@@ -300,12 +288,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 	public abstract String getName();
 
 
-////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * ����λ��תΪ��Ļλ��
-	 * @param p
-	 * @return
-	 */
+
 	public static Vec2 world2Scn(Vec2 p) {
 		Vec2 out = new Vec2();
 		world2ScnOut(p, out);
@@ -316,11 +299,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		out.set(p.x*RATE, p.y*RATE);
 	}
 
-	/**
-	 * ��Ļλ��תΪ����λ��
-	 * @param p
-	 * @return
-	 */
+
 	public static Vec2 scn2wrold(Vec2 p) {
 		Vec2 out = new Vec2();
 		scn2wroldOut(p, out);
@@ -332,17 +311,17 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 	}
 
 
-///////////////////////////////////////////////////////////////////////////////
+
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		// TODO Auto-generated method stub
 		boolean b = false;
 
-		b = mouseJointEvent(event);
-		if(!b)
-			b = debugDraw.onTouchEvent(event);
-		if(!b)
-			return super.onTouchEvent(event);
+//		b = mouseJointEvent(event);
+//		if(!b)
+//			b = debugDraw.onTouchEvent(event);
+//		if(!b)
+//			return super.onTouchEvent(event);
 
 		return b;
 	}
@@ -357,9 +336,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		float x = event.getX();
 		float y = event.getY();
 
-//		mouseDownPoint.set(event.getX(), event.getY());
-//		scn2wroldOut(mouseDownPoint, mouseDownPoint);
-		//�ӽ��е�λ��
+
 		debugDraw.getScreenToWorldToOut(x, y, mouseDownPoint);
 
 		switch (event.getAction()) {
@@ -370,7 +347,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 					mouseDragBody = null;
 				}
 
-				//��ת��Ϊ�������е�λ�ã���Ϊ�����λ��ֻ�ǿ��������λ�ö���
+
 				queryAABB.lowerBound.set(mouseDownPoint.x - 3/RATE, mouseDownPoint.y - 3/RATE);
 				queryAABB.upperBound.set(mouseDownPoint.x + 3/RATE, mouseDownPoint.y + 3/RATE);
 				world.queryAABB(callback, queryAABB);
@@ -379,10 +356,10 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 
 					mouseJointDef.bodyA = m_ground;
 					mouseJointDef.bodyB = mouseDragBody;
-					mouseJointDef.target.set(mouseDownPoint); // Ŀ�ĵ�
-					mouseJointDef.maxForce = 1000f * mouseDragBody.getMass(); // �������
-					mouseJoint = (MouseJoint) world.createJoint(mouseJointDef); // ���ؽ�
-					mouseDragBody.setAwake(true); // ����body
+					mouseJointDef.target.set(mouseDownPoint);
+					mouseJointDef.maxForce = 1000f * mouseDragBody.getMass();
+					mouseJoint = (MouseJoint) world.createJoint(mouseJointDef);
+					mouseDragBody.setAwake(true);
 
 					return true;
 				}
@@ -414,11 +391,9 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 
 
 
-	//��ѯ�ص�
+
 	class TestQueryCallback implements QueryCallback {
-		/**
-		 * �����ѯ�����false��ֹ��ѯ
-		 */
+
 		@Override
 		public boolean reportFixture(Fixture fixture) {
 			// TODO Auto-generated method stub
@@ -436,7 +411,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		}
 	}
 
-///////////////////////////////////////////////////////////////////////////////
+
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
@@ -445,11 +420,11 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		mSensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
 		Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager.registerListener(mAccelListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-		//һ��Ҫ�ڻ�ȡ��Ļ��ߺ����
+
 		initWorld();
 		initTest();
 
-		//���߳�
+
 		thread = new Thread(this);
 		isRun = true;
 		thread.start();
@@ -457,8 +432,7 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-		// TODO Auto-generated method stub
-		// ����Ļ��ת��ʱ�����»�ȡ��Ļ���
+
 		screenW = getWidth();
 		screenH = getHeight();
 	}
@@ -477,8 +451,8 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		destoryWorld();
 	}
 
-	private boolean isRun; // �߳����б�־
-	private int useTime; // ��¼ÿ��ˢ��ʹ�õ�ʱ��
+	private boolean isRun;
+	private int useTime;
 	private int totalTime;
 	@Override
 	public void run() {
@@ -487,22 +461,27 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 
 		while (isRun) {
 			try{
-			start = System.currentTimeMillis();
-			{
-				Canvas canvas = holder.lockCanvas();
-				//dropIntoHole(getWorld());
-				_update(); // ˢ�½���������Ԫ��
+				start = System.currentTimeMillis();
+				{
 
-				_draw(canvas); // ���ƽ���Ԫ��
+					Canvas canvas = holder.lockCanvas();
 
-				end = System.currentTimeMillis();
-				holder.unlockCanvasAndPost(canvas);
+
+					dropIntoHole(getWorld(),canvas);
+					_update();
+
+					_draw(canvas);
+
+					end = System.currentTimeMillis();
+					holder.unlockCanvasAndPost(canvas);
+				}
+				useTime = (int) (end - start);
+				totalTime=totalTime+1;
+			}catch(Exception e){
+				e.printStackTrace();
 			}
-			useTime = (int) (end - start);
-			totalTime=totalTime+1;
-			}catch(Exception e){}
 
-			if (useTime < GAME_HEART) { // ��֤ÿ��ˢ��ʱ������ͬ
+			if (useTime < GAME_HEART) {
 				try {
 					Thread.sleep(GAME_HEART - useTime);
 				} catch (InterruptedException e) {
@@ -512,14 +491,6 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 			}
 		}
 	}
-
-
-
-
-
-
-
-
 
 
 
@@ -580,8 +551,8 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 					lock = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 				}
 
-				}
 			}
+		}
 
 
 		return lock;
@@ -640,143 +611,28 @@ public abstract class Box2dSurfaceView extends SurfaceView implements Callback, 
 		}
 	};
 
-public void plot(Canvas canvas){
-//	   simulateSmoothCircle(canvas,300);
-//	    simulateSmoothCircle(canvas,298);
 
-//		simulateSmoothCircle(canvas,252);
-//
-//
-//		simulateSmoothCircle(canvas,212);
-//
-//		simulateSmoothCircle(canvas,172);
-//
-//		simulateSmoothCircle(canvas,132);
-//
-//		simulateSmoothCircle(canvas,92);
-//		simulateSmoothCircle(canvas,52);
-//
-//		drawLine(canvas,(screenW/2)-210,(screenH/2+10),1);
-//		drawLine(canvas,(screenW/2)+172,(screenH/2+36),1);
-//		drawLine(canvas,(screenW/2+57),(screenH/2+122+22),0);// horizontal
-//		drawLine(canvas,(screenW/2+50),(screenH/2+122+32),0);// horizontal
-//		drawLine(canvas,(screenW/2+87),(screenH/2+20),1);
-//		drawLine(canvas,(screenW/2-50),(screenH/2+32),1);// inner
+
+
+
+	public void drawBackground(Canvas canvas){
+
+
+		try {
+			canvas.drawBitmap(backgraaaa, v1.x / 2, v1.y / 2, paint);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 
 
 	}
 
-	private Bitmap createDynamicGradient(String color) {
-		int colors[] = new int[3];
-		colors[0] = Color.parseColor(color);
-		colors[1] = Color.parseColor("#eee");
-		colors[2] = Color.parseColor("#eee");
-
-		LinearGradient gradient = new LinearGradient(0, 0, 800, 1200, Color.RED, Color.TRANSPARENT, Shader.TileMode.CLAMP);
-		Paint p = new Paint();
-		p.setDither(true);
-		p.setShader(gradient);
-
-		Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
-		Canvas canvas = new Canvas(bitmap);
-		canvas.drawRect(new RectF(0, 0, getWidth(), getHeight()), p);
-
-		return bitmap;
-	}
-
-public void drawBackground(Canvas canvas){
-
-//	int halfWidth = Width/2;
-//	int halfHeight = Height/2
-//	Rect dstRectForRender = new Rect( X - halfWidth, Y - halfHeight, X + halfWidth, Y + halfHeight );
-//	canvas.drawBitmap ( someBitmap, null, dstRectForRender, null );
-	canvas.drawBitmap(backgraaaa, v1.x/2,v1.y/2, paint);
-//	canvas.drawBitmap(hole, 0f,70.0f, paint);
-
-}
-
-	public void simulateSmoothCircle(Canvas canvas,int radius){
-		Paint p=paint;
-		p.setColor(Color.parseColor("#66341B"));
-//		if(radius==300){
-//
-////			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.wooden);
-////			BitmapShader  fillBMPshader = new BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
-////			  p.setShader(fillBMPshader);
-//			  p.setShadowLayer(5.5f, 6.0f, 6.0f, Color.BLACK);
-//
-//			  canvas.drawCircle(screenW/2, screenH/2+30, radius, p);
-//				 p.setColor(Color.parseColor("#E6CBB8"));
-//				 p.setShader(null);
-//		}
-
-		if(radius==298){
-
-			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.greatvak);
-			BitmapShader  fillBMPshader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-			  p.setShader(fillBMPshader);
-
-			  canvas.drawCircle(screenW/2f, screenH/2f, radius, p);
-				 p.setColor(Color.parseColor("#E6CBB8"));
-				 p.setShader(null);
-				 p.setShadowLayer(0f, 0f, 0f, Color.BLACK);
-				// canvas.setBitmap(background);
-
-				 //canvas.drawCircle(screenW/2, screenH/2+30, radius-5, p);
-		}
-	else{
-		p.setShadowLayer(0f, 0f, 0f, Color.BLACK);
-		if(radius==252){
 
 
-			p.setColor(Color.parseColor("#000000"));
-
-			 canvas.drawCircle(screenW/2f, screenH/2f, radius, p);
-			 p.setColor(Color.parseColor("#E6CBB8"));
-			 p.setShader(null);
-			// canvas.setBitmap(background);
-
-			 canvas.drawCircle(screenW/2f, screenH/2f, radius-5, p);
-		}
-		else{
-		 p.setColor(Color.parseColor("#66341B"));
-
-		 canvas.drawCircle(screenW/2f, screenH/2f, radius, p);
-		 p.setColor(Color.parseColor("#E6CBB8"));
-		 p.setShader(null);
-		// canvas.setBitmap(background);
-
-		 canvas.drawCircle(screenW/2f, screenH/2f, radius-5, p);
-		}
-		}
-
-
-
-
-
-
-
-
-	}
-
-	public void drawLine(Canvas canvas,int sx,int sy,int hv){
-		 paint.setShadowLayer(0, 0, 0,Color.parseColor("#66341B"));
-		 paint.setColor(Color.parseColor("#E6CBB8"));
-		// paint.setColor(Color.parseColor("#000000"));
-		 paint.setStrokeWidth(15.0f);
-
-		 try{
-
-		 if(hv==0){ canvas.drawLine(sx-20, sy,sx+20 ,sy, paint);}
-		 else{canvas.drawLine(sx, sy-20,sx ,sy+20, paint);}
-		 }catch(Exception e){}
-
-
-	}
 
 	////
 
-	public void dropIntoHole(World world){
+	public void dropIntoHole(World world,Canvas canvas){
 
 		//boolean gameOver=false;
 
@@ -785,133 +641,238 @@ public void drawBackground(Canvas canvas){
 		int totalDynamicBodies=0;
 
 
+		int yMid=(screenW/5)/2;
+
+		Map<Integer,Integer> centerMap=new HashMap<Integer,Integer>();
+
+		centerMap.put(yMid,0);
+		centerMap.put(yMid+5,0);
+		centerMap.put(yMid-5,0);
+		centerMap.put(0,yMid-5);
+		centerMap.put(1,yMid+5);
+
+//		createHolesAt(-15f, yMid-4);// 2
+//		createHolesAt(-14f, yMid+10);// 2u
+//		createHolesAt(0f, yMid-12);// 1
+//		createHolesAt(0f, yMid+22);//3
+//		createHolesAt(22f, yMid+6);// 3l
+
+		Map<Integer,Integer> holesMap=new HashMap<Integer,Integer>();
+		//holesMap.put(-16,yMid-4);
+		holesMap.put(-15,yMid-4);
+		//holesMap.put(-14,yMid-4);
+
+		//holesMap.put(-9,yMid+10);
+		holesMap.put(-14,yMid+10);
+		//holesMap.put(-11,yMid+10);
+
+
+		//holesMap.put(-1,yMid-8);
+		holesMap.put(0,yMid-12);
+		//holesMap.put(1,yMid-8);
+
+		//holesMap.put(2,yMid+20);
+		holesMap.put(1,yMid+22);
+		//holesMap.put(4,yMid+20);
+
+
+		//holesMap.put(17,yMid+6);
+		holesMap.put(22,yMid+6);
+		//holesMap.put(19,yMid+6);
+
+		//System.out.println("x----15-----"+String.valueOf( yMid+6 )  );
+
+
+		allInCenter(world);
+
+
+
+
+
 
 		for ( Body b = world.getBodyList(); b!=null; b = b.getNext() )
-	    {
-	      // System.out.println("x----y"+ String.valueOf( b.getPosition().x )+"-----"+String.valueOf( b.getPosition().y )  );
-
-	        if(b.getType().equals(BodyType.DYNAMIC)){
+		{
 
 
-//	        	System.out.println("-----------x-----------"+b.getPosition().x);
-//                System.out.println("-----------y-----------"+b.getPosition().y);
+			if(b.getType().equals(BodyType.DYNAMIC)){
 
-//				if(b.getPosition().x<20 ||b.getPosition().x>50 ){
-//
-//
-//
-//                        Float vX=(-1)*b.m_linearVelocity.x;
-//                        Float vY=b.m_linearVelocity.y;
-//
-//
-//                        b.m_linearVelocity.set(vX,vY);
-//
-//
-//				}
-//
-//
-//
-//
-//                if(b.getPosition().y<20 && b.getPosition().y>50){
-//
-//
-//
-//                    Float vX=b.m_linearVelocity.x;
-//                    Float vY=(-1)*b.m_linearVelocity.y;
-//
-//
-//                    b.m_linearVelocity.set(vX,vY);
-//
-//
-//                }
+				//System.out.println("x----y"+ String.valueOf( b.getPosition().x )+"-----"+String.valueOf( b.getPosition().y )  );
+
+				try {
+
+					if(holesMap.containsKey((int)b.getPosition().x)){
+
+						//	System.out.println("----range------------");
+
+						int thisValue=(int)b.getPosition().y;
+
+						int left=holesMap.get((int)b.getPosition().x).intValue()+5;
+
+						int right=holesMap.get((int)b.getPosition().x).intValue()-5;
+						//thisValue-115--right------109-------left--119
 
 
 
+						if(thisValue>=right&&thisValue<=left){
+//								System.out.println("------x-"+ (int)b.getPosition().x);
+//								System.out.println("------thisValue-"+ thisValue+"--right------"+right+"-------left--"+left);
 
-	        	//if((b.getPosition().y<=71.0f&&b.getPosition().y>=69.0f)&&( b.getPosition().x>=-1f&&b.getPosition().x<=1)){
+							//Toast.makeText(context, "Dropped..H", Toast.LENGTH_LONG).show();
 
-	        // check the balls are in the hole
+							canvas.drawText("Dropped..H",
+									50, 50 ,
+									paint);
 
-	        	if(inTheHole(b, 0, 70)||inTheHole(b, 0, 40)||inTheHole(b, -17, 50)||inTheHole(b, 15, 45)){
-	        	//	System.out.println("-------------insideeeeeeeee------x---"+b.getPosition().x);
-	        	//	System.out.println("-------------insideeeeeeeee------y---"+b.getPosition().y);
-	        		 b.setLinearVelocity(new Vec2(0f,0f));
-	        		 b.setTransform(new Vec2(0f,82f), 0);
-	        		 SoundPool sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
-       	       		 int   mySound = sp.load(context,R.raw.tileclick, 1);
-       	       		// sp.play(mySound, 3f, 3f, 0, 0, 1f);
-       	       	sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-       	         @Override
-       	         public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-       	             soundPool.play(sampleId, 10.0f, 10.0f, 0, 0, 1.0f);
-       	         }
-       	     });
-
-
-	        	}
-
-	        	// check the balls are in the center;
-
-	        	if(inTheCenter(b)){
+							b.setLinearVelocity(new Vec2(0f, 0f));
+							b.setTransform(new Vec2(0f, 75f), 0);
+							SoundPool sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+							int mySound = sp.load(context, R.raw.tileclick, 1);
+							// sp.play(mySound, 3f, 3f, 0, 0, 1f);
+							sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+								@Override
+								public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+									soundPool.play(sampleId, 10.0f, 10.0f, 0, 0, 1.0f);
+								}
+							});
+						}
 
 
-       	     gameOver++;
+					}
 
-	        	}
-//	        	 // totalDynamicBodies++;
-	        }
+					if(centerMap.containsKey((int)b.getPosition().x)||centerMap.containsKey((int)b.getPosition().x)){
+
+						//	System.out.println("----range------------");
+
+						int thisValue=(int)b.getPosition().y;
+
+						int left=holesMap.get((int)b.getPosition().x).intValue();
+
+						int right=holesMap.get((int)b.getPosition().x).intValue();
+						//thisValue-115--right------109-------left--119
+
+
+
+						if(thisValue>=right&&thisValue<=left){
+
+							canvas.drawText("Dropped..C",
+									50, 50 ,
+									paint);
+
+
+//							animFadein = AnimationUtils.loadAnimation(context, R.anim.fadein);
+//							animFadeout = AnimationUtils.loadAnimation(context, R.anim.fadein);
+//							message.setText("Lust defeated you ! take a deep breath");
+//							message.startAnimation(animFadeout);
+
+							//Toast.makeText(context, "Dropped..H", Toast.LENGTH_LONG).show();
+
+							System.out.println("------x-"+ (int)b.getPosition().x);
+							System.out.println("------thisValue-"+ thisValue+"--right------"+right+"-------left--"+left);
+
+							b.setLinearVelocity(new Vec2(0f, 0f));
+							b.setTransform(new Vec2(0f, 75f), 0);
+							SoundPool sp = new SoundPool(2, AudioManager.STREAM_MUSIC, 0);
+							int mySound = sp.load(context, R.raw.tileclick, 1);
+							// sp.play(mySound, 3f, 3f, 0, 0, 1f);
+							sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+								@Override
+								public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+									soundPool.play(sampleId, 10.0f, 10.0f, 0, 0, 1.0f);
+								}
+							});
+						}
+
+
+					}
+
+
+
+				}catch (Exception e){}
+
+			}
 
 
 
 
-	    }
+		}
 
-		//System.out.println("now----"+gameOver+"--"+totalDynamicBodies);
-//		if(gameOver==totalDynamicBodies){
-//
-//
-//
-//
-//			Activity act=(GameActivity)context;
-//			act.startActivity(new Intent(context,MainActivity.class));
-//			act.finish();
-//
-//
-//
-//			//Toast.makeText(context, "now"+gameOver+"--"+totalDynamicBodies, Toast.LENGTH_SHORT).show();
-//
-//
-//		}
+
 
 	}
 
 	public Boolean inTheHole(Body b,int x,int y){
 		Boolean yes=false;
 		if((b.getPosition().y<=71.0f&&b.getPosition().y>=69.0f)&&( b.getPosition().x>=-1f&&b.getPosition().x<=1)){yes=true;}
-		//if((b.getPosition().y<=y+1f&&b.getPosition().y>=y-1)&&( b.getPosition().x>=x-1f&&b.getPosition().x<=x+1)){yes=true;}
-		//if((b.getPosition().y<=71.0f&&b.getPosition().y>=69.0f)&&( b.getPosition().x>=-1f&&b.getPosition().x<=1)){yes=true;}
-		//if((b.getPosition().y<=71.0f&&b.getPosition().y>=69.0f)&&( b.getPosition().x>=-1f&&b.getPosition().x<=1)){yes=true;}
+
 		return yes;
 	}
+
+	public void allInCenter(World world){
+
+		new CenterTask(world).execute();
+	}
+
+
+
+	public class CenterTask extends AsyncTask<Void, Void, Boolean> {
+		private String URL;
+		World world;
+
+
+		public CenterTask(World world) {
+			this.world = world;
+
+		}
+
+		@Override
+		protected Boolean doInBackground(Void... params) {
+			Boolean all = true;
+
+			for (Body b = world.getBodyList(); b != null; b = b.getNext()) {
+
+				if (b.getType().equals(BodyType.DYNAMIC)) {
+
+					if ((b.getPosition().y<=112&&b.getPosition().y>=103)&&( b.getPosition().x>=1&&b.getPosition().x<=4)) {
+
+						all = true;
+
+					} else {
+						all = false;
+					}
+				}
+			}
+			return all;
+
+		}
+
+		@Override
+		protected void onPostExecute(Boolean s) {
+			super.onPostExecute(s);
+			if (s) {
+				//	Toast.makeText(context, "Done..", Toast.LENGTH_LONG).show();
+				animFadein = AnimationUtils.loadAnimation(context, R.anim.fadein);
+				animFadeout = AnimationUtils.loadAnimation(context, R.anim.fadein);
+				message.setText("Wooow ! Victory");
+				message.startAnimation(animFadein);
+
+			}
+
+
+		}
+	}
+
+
 
 	public Boolean inTheCenter(Body b){
 		Boolean yes=false;
 
-//		float upperX=screenW/2+47;
-//		float uppperY=screenH/2-17;
-//		float lowerX=screenW/2-47;
-//		float lowerY=screenH/2+77;
-
-		float upperX=3.3f;
-		float uppperY=61f;
-		float lowerX=0f;
-		float lowerY=55f;
 
 
 
-		if((b.getPosition().y<=uppperY&&b.getPosition().y>=lowerY)&&( b.getPosition().x>=lowerX&&b.getPosition().x<=upperX)){
+		if((b.getPosition().y<=112&&b.getPosition().y>=103)&&( b.getPosition().x>=1&&b.getPosition().x<=4)){
 
-			yes=true;}
+			yes=true;
+		}
 		return yes;
 	}
 
@@ -921,31 +882,10 @@ public void drawBackground(Canvas canvas){
 		public void beginContact(Contact arg0) {
 			// TODO Auto-generated method stub
 
-//			 String name1 = (String)arg0.shape1.getBody().getUserData();
-//			 String name2 = (String)arg0.shape2.getBody().getUserData();
-			String name1 = (String)arg0.getFixtureA().getBody().getUserData();
-			 String name2 = (String)arg0.getFixtureB().getBody().getUserData();;
 
-//			 if(name1.equals("static")){
-//				// System.out.println("Contact detected between------------------------------- "+ name1 + " and "+ name2);
-//				// arg0.getFixtureB().getBody().getPosition().set(0f, 80.0f);
-//				// world.destroyBody(arg0.getFixtureB().getBody());
-//				// _update();
-//				 Body body=arg0.getFixtureB().getBody();
-//				 body.setTransform(new Vec2(0f,26f), 0);
-//				 _update();
-//
-//			 }else if(name2.equals("static")){
-//				// System.out.println("Contact detected between------------------------------- "+ name1 + " and "+ name2);
-//
-//				// arg0.getFixtureA().getBody().getPosition().set(0f, 80.0f);
-//				// world.destroyBody(arg0.getFixtureA().getBody());
-//				// _update();
-//				//
-//				 Body body=arg0.getFixtureA().getBody();
-//				 body.setTransform(new Vec2(0f,26f), 0);
-//				 _update();
-//			 }
+			String name1 = (String)arg0.getFixtureA().getBody().getUserData();
+			String name2 = (String)arg0.getFixtureB().getBody().getUserData();;
+
 
 
 
@@ -971,24 +911,24 @@ public void drawBackground(Canvas canvas){
 		}
 
 
-};
+	};
 
-public void ShowTime(){
-
-
-	 new CountDownTimer(60000, 1000) {
-
-        public void onTick(long millisUntilFinished) {
-            timer = String.valueOf(millisUntilFinished / 1000);
-        }
-
-        public void onFinish() {
-        }
-        }.start();
+	public void ShowTime(){
 
 
+		new CountDownTimer(60000, 1000) {
 
-    }
+			public void onTick(long millisUntilFinished) {
+				timer = String.valueOf(millisUntilFinished / 1000);
+			}
+
+			public void onFinish() {
+			}
+		}.start();
+
+
+
+	}
 
 
 

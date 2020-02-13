@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="Gradle: __local_jars__:/Users/nabinrajpandey/neatcode/Android/ZenQuestBall/ZenQuest/app/src/main/libs/JBox2d4Android_2.1.2.jar:unspecified@jar">
+  <library name="Gradle: __local_aars__:/Users/nabinrajpandey/neatcode/Android/zenquestball_Android/ZenQuest/app/src/main/libs/JBox2d4Android_2.1.2.jar:unspecified@jar">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/app/src/main/libs/JBox2d4Android_2.1.2.jar!/" />
     </CLASSES>

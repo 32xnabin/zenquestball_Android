@@ -1,9 +1,5 @@
 package dawn.zenquest;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-
 
 import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.common.Color3f;
@@ -12,10 +8,7 @@ import org.jbox2d.common.Transform;
 import org.jbox2d.common.Vec2;
 
 
-
-import android.R.color;
 import android.graphics.Bitmap;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -24,9 +17,6 @@ import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Shader;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.CountDownTimer;
 import android.view.MotionEvent;
 
 
@@ -49,15 +39,15 @@ public class Box2dDebugDraw extends DebugDraw {
 	Bitmap bmp1;
 	public Box2dDebugDraw(Box2dSurfaceView testbedView,POJO pojo) {
 		super(new OBBViewportTransform());
-		this.bmp=pojo.getBall2();
-		this.bmp1=pojo.getBall4();
+		this.bmp=pojo.getBackground();
+		this.bmp1=pojo.getBall();
 		this.testbedView = testbedView;
 
 		path = new Path();
 		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		transform = (OBBViewportTransform) viewportTransform;
 
-		//Ĭ���ӽ�λ�ã���Ļ����λ������������λ���غϣ�
+
 		scale = 10;
 		camera_x = -(Box2dSurfaceView.screenW/2) / scale;
 		camera_y = (Box2dSurfaceView.screenH - 10) / scale;
@@ -101,7 +91,7 @@ public class Box2dDebugDraw extends DebugDraw {
 //				down_y = y;
 //				break;
 //			}
-//			
+//
 //			case MotionEvent.ACTION_MOVE:{
 //				System.out.println("ACTION_MOVE");
 //				camera_x -= (x-down_x)/TestbedView.RATE;
@@ -111,7 +101,7 @@ public class Box2dDebugDraw extends DebugDraw {
 //				setCamera();
 //				break;
 //			}
-//			
+//
 //			//case MotionEvent.
 //		}
 
@@ -187,26 +177,26 @@ public class Box2dDebugDraw extends DebugDraw {
 				path.lineTo(temp.x, temp.y);
 		}
 		path.close();
-//		BitmapShader fillBMPshader = new BitmapShader(bmp, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT); 
+//		BitmapShader fillBMPshader = new BitmapShader(bmp, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 //		paint.setShader(fillBMPshader);
 		//paint.setShadowLayer(3, 3, 3, Color.RED);
 
 
 
-//        paint.setDither(true);  
-//        paint.setColor(0xFFFFFF00);  
-//        paint.setStyle(Paint.Style.STROKE);  
-//        paint.setAntiAlias(true);  
-//        paint.setStrokeWidth(3);  
+//        paint.setDither(true);
+//        paint.setColor(0xFFFFFF00);
+//        paint.setStyle(Paint.Style.STROKE);
+//        paint.setAntiAlias(true);
+//        paint.setStrokeWidth(3);
 
 		//Initialize the bitmap object by loading an image from the resources folder
-//       Bitmap fillBMP = bmp; 
-//        //Initialize the BitmapShader with the Bitmap object and set the texture tile mode  
-//       BitmapShader fillBMPshader = new BitmapShader(fillBMP, TileMode.REPEAT, Shader.TileMode.REPEAT);  
-//  
-//        //Initialize the fillPaint object  
-//      
-//       paint.setShader(fillBMPshader);  
+//       Bitmap fillBMP = bmp;
+//        //Initialize the BitmapShader with the Bitmap object and set the texture tile mode
+//       BitmapShader fillBMPshader = new BitmapShader(fillBMP, TileMode.REPEAT, Shader.TileMode.REPEAT);
+//
+//        //Initialize the fillPaint object
+//
+//       paint.setShader(fillBMPshader);
 		// canvas.setBitmap(bmp);
 		//	paint.setShader(new LinearGradient(0, 0, 0, 5, Color.BLACK, Color.WHITE, Shader.TileMode.MIRROR));
 		//paint.setShader(new LinearGradient(1, 1, 1, 3, Color.BLACK, Color.WHITE, Shader.TileMode.CLAMP));
@@ -262,7 +252,7 @@ public class Box2dDebugDraw extends DebugDraw {
 		//System.out.println("----------------C---radius------"+radius);
 //		System.out.println("----------------C------axis---"+axis);
 //		System.out.println("----------------C------center---"+center);
-		if(radius==1.6f){
+		if(radius==2.1f){
 ////		PaintHelper helper=new PaintHelper();
 ////		paint=helper.getGradient1(paint,sp1.x, sp1.y,radius*scale);
 			Paint p=new Paint();
